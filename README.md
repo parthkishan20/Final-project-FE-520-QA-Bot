@@ -1,95 +1,83 @@
-# Financial QA Bot - Production Edition
+# Financial QA Bot
 
-**A production-ready financial analysis tool that reads CSV data and answers business questions using AI-powered natural language processing.**
+A Python application for analyzing financial spreadsheets and answering questions in natural language.
 
----
+## Overview
 
-## 🎯 Overview
+The Financial QA Bot reads CSV financial data and generates insights through intelligent question answering. It combines data analysis with optional AI-powered responses to provide flexible, accurate financial reporting.
 
-The Financial QA Bot is an enterprise-grade application for analyzing financial spreadsheets and generating insights through natural language questions. It combines:
+**Key Capabilities:**
+- Load and analyze CSV financial datasets
+- Ask questions about financial metrics in plain English
+- Get answers through rule-based or AI-powered modes
+- Generate professional visualizations
+- Export results as JSON reports
 
-- **Data Analysis**: pandas-based CSV processing
-- **Smart Retrieval**: Fuzzy matching for flexible queries  
-- **AI Integration**: Optional GPT-4o-mini for sophisticated answers
-- **Visualizations**: Professional charts for business reports
-- **Production Features**: Logging, configuration management, batch processing
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
 ```bash
-# Clone repository
-cd Final-project-FE-520
-
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up OpenAI API key (optional)
+# Set up OpenAI API key (optional for AI-powered answers)
 export OPENAI_API_KEY='sk-your-key-here'
 ```
 
 ### Run the Application
 
 ```bash
-# Production analysis
+# Run the analysis
 python app.py
 
-# Output: financial_analysis_report.json + charts in output/
+# View results
+cat output/financial_analysis_report.json
 ```
 
----
+## Features
 
-## 📊 Business Use Cases
+### Data Analysis
+- CSV file loading with validation
+- Fuzzy column matching for flexible queries
+- Year/date filtering
+- Data exploration tools
 
-**Financial Analysis**
-- Revenue trend analysis
-- Profit margin tracking
-- Expense monitoring
-- Asset valuation
+### Question Answering
+- Rule-based pattern matching (no API key needed)
+- Optional AI-powered responses using GPT-4o-mini
+- Automatic fallback to rule-based mode
+- Batch question processing
 
-**Reporting**
-- Automated Q&A reports
-- Batch analysis processing
-- Chart generation
-- JSON export for integration
+### Visualizations
+- Line charts for trends
+- Bar charts for comparisons
+- Multi-metric comparison charts
+- Professional formatting with currency display
 
-**Integration**
-- Business intelligence dashboards
-- Financial data pipelines
-- Automated reporting systems
+### Output
+- Structured JSON reports
+- PNG visualizations
+- Detailed application logs
+- Clean console output
 
----
+## Usage
 
-## 📁 Project Structure
+### Command Line
 
+```bash
+# Basic usage
+python app.py
+
+# With custom data file
+DATA_FILE=my_data.csv python app.py
+
+# Without AI (rule-based only)
+USE_LLM=false python app.py
+
+# With custom configuration
+OUTPUT_DIR=reports LOG_LEVEL=DEBUG python app.py
 ```
-Final-project-FE-520/
-├── finqa_bot/                 # Core package
-│   ├── __init__.py           # Package exports
-│   ├── data_indexer.py       # CSV data loading
-│   ├── retriever.py          # Smart data retrieval
-│   ├── qa_chain.py           # Question answering
-│   ├── visualizer.py         # Chart generation
-│   ├── error_handler.py      # Error management
-│   ├── config.py             # Configuration
-│   └── logger.py             # Production logging
-│
-├── app.py                     # Production application
-├── sample_data.csv            # Example financial data
-├── output/                    # Generated reports & charts
-│   ├── financial_analysis_report.json
-│   └── charts/
-│
-├── README.md                  # This file
-└── requirements.txt           # Dependencies
-```
-
----
-
-## 💻 API Usage
 
 ### As a Python Module
 
@@ -97,13 +85,8 @@ Final-project-FE-520/
 from app import FinancialQABot
 from finqa_bot.config import Config
 
-# Initialize with custom config
-config = Config(
-    DATA_FILE="your_data.csv",
-    USE_LLM=True,
-    MODEL="gpt-4o-mini"
-)
-
+# Initialize
+config = Config(DATA_FILE="data.csv", USE_LLM=True)
 bot = FinancialQABot(config)
 bot.load_data()
 
@@ -112,48 +95,88 @@ result = bot.ask("What was revenue in 2023?")
 print(result["answer"])
 
 # Batch processing
-questions = [
-    "What was net income in 2021?",
-    "What were operating expenses in 2020?"
-]
+questions = ["What was net income in 2021?", "What were expenses in 2020?"]
 report_file = bot.generate_report(questions)
 
 # Generate charts
 bot.export_chart("Revenue", chart_type="line")
 ```
 
-### Command Line
+## Configuration
 
-```bash
-# Production run with defaults
-python app.py
-
-# With custom configuration
-DATA_FILE=my_data.csv OUTPUT_DIR=reports python app.py
-
-# With LLM disabled (faster, free)
-USE_LLM=false python app.py
-```
-
----
-
-## ⚙️ Configuration
-
-Edit `finqa_bot/config.py` or set environment variables:
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `USE_LLM` | true | Enable AI-powered answers |
-| `LLM_MODEL` | gpt-4o-mini | Model to use |
+| `LLM_MODEL` | gpt-4o-mini | Model to use (gpt-4o-mini recommended) |
+| `OPENAI_API_KEY` | (none) | OpenAI API key |
 | `DATA_FILE` | sample_data.csv | Input CSV file |
 | `OUTPUT_DIR` | output | Output directory |
 | `LOG_LEVEL` | INFO | Logging level |
 
----
+### Python Configuration
 
-## 📊 Output Format
+```python
+from finqa_bot.config import Config
 
-### Analysis Report (JSON)
+config = Config(
+    DATA_FILE="your_data.csv",
+    USE_LLM=True,
+    MODEL="gpt-4o-mini",
+    OUTPUT_DIR="reports",
+    LOG_LEVEL="INFO"
+)
+```
+
+## Data Format
+
+Your CSV should contain a Year/Date column and financial metric columns:
+
+```csv
+Year,Revenue,Net_Income,Operating_Expenses,Total_Assets
+2019,1000000,150000,300000,2000000
+2020,1150000,172500,330000,2300000
+2021,1380000,207000,360000,2650000
+2022,1520000,228000,380000,2900000
+2023,1650000,247500,400000,3100000
+```
+
+Supported question patterns:
+- "What was [metric] in [year]?"
+- "What is the [metric]?"
+- "How much was [metric] in [year]?"
+
+Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
+
+## Project Structure
+
+```
+├── app.py                         # Main application
+├── requirements.txt               # Dependencies
+├── sample_data.csv               # Example data
+├── .env                          # API key (optional)
+│
+├── finqa_bot/                    # Core package
+│   ├── __init__.py
+│   ├── config.py                 # Configuration management
+│   ├── logger.py                 # Logging setup
+│   ├── data_indexer.py           # CSV data loading
+│   ├── retriever.py              # Data retrieval
+│   ├── qa_chain.py               # Question answering
+│   ├── visualizer.py             # Chart generation
+│   └── error_handler.py          # Error management
+│
+├── README.md                     # This file
+└── output/                       # Generated artifacts (auto-created)
+    ├── financial_analysis_report.json
+    ├── charts/
+    └── finqa_bot.log
+```
+
+## Output Format
+
+### Report (JSON)
 
 ```json
 {
@@ -172,23 +195,20 @@ Edit `finqa_bot/config.py` or set environment variables:
 }
 ```
 
-### Generated Artifacts
-
-- `output/financial_analysis_report.json` - Complete analysis
+### Generated Files
+- `output/financial_analysis_report.json` - Complete analysis results
 - `output/charts/*.png` - Visualizations
 - `output/finqa_bot.log` - Detailed logs
 
----
+## API Keys
 
-## 🔑 API Key Setup
-
-### Get an OpenAI Key
+### Getting an OpenAI Key
 
 1. Visit https://platform.openai.com/api-keys
 2. Create a new secret key
 3. Copy the key (starts with `sk-`)
 
-### Set Environment Variable
+### Setting the Key
 
 **macOS/Linux:**
 ```bash
@@ -202,132 +222,120 @@ $env:OPENAI_API_KEY='sk-your-key-here'
 
 ### Cost
 
-- **GPT-4o-mini**: $0.15 per 1M input tokens, $0.60 per 1M output tokens
-- **Cost per question**: ~$0.0001-0.0002 (very cheap)
+- **Model**: gpt-4o-mini (most cost-effective)
+- **Input**: $0.15 per 1M tokens
+- **Output**: $0.60 per 1M tokens
+- **Per question**: ~$0.0001-0.0002
 - **Free tier**: $5 credit available
 
----
+## Core Modules
 
-## 📈 Data Format
-
-Your CSV should have:
-- One **Year/Date** column
-- One or more **financial metric** columns
-
-**Example:**
-
-```csv
-Year,Revenue,Net_Income,Operating_Expenses,Total_Assets
-2019,1000000,150000,300000,2000000
-2020,1150000,172500,330000,2300000
-2021,1380000,207000,360000,2650000
-2022,1520000,228000,380000,2900000
-2023,1650000,247500,400000,3100000
+### DataIndexer
+Loads and manages CSV data.
+```python
+indexer = DataIndexer('data.csv')
+columns = indexer.get_columns()
+data = indexer.head(5)
 ```
 
----
-
-## 🧪 Testing
-
-```bash
-# Run production demo
-python app.py
-
-# View report
-cat output/financial_analysis_report.json
-
-# Check logs
-cat output/finqa_bot.log
-
-# View charts
-open output/charts/revenue.png  # macOS
+### Retriever
+Finds specific values with intelligent matching.
+```python
+retriever = Retriever(indexer)
+column = retriever.find_column('revenue')      # Fuzzy match
+value = retriever.get_value('Revenue', year=2023)
 ```
 
----
-
-## 🛠️ Development
-
-### Project Phases
-
-- **Phase 0**: Environment setup
-- **Phase 1**: Package structure
-- **Phase 2**: DataIndexer (CSV loading)
-- **Phase 3**: Retriever (data finding)
-- **Phase 4**: QAChain (rule-based QA)
-- **Phase 5**: LangChain integration (AI)
-- **Phase 6**: Visualizations (charts)
-- **Phase 7**: Error handling (robustness)
-- **Phase 8**: Production deployment
-
-### Key Technologies
-
-- **pandas**: Data processing
-- **LangChain**: LLM orchestration
-- **OpenAI**: GPT-4o-mini model
-- **matplotlib**: Visualizations
-- **Python 3.10+**: Language
-
----
-
-## 📝 Logging
-
-Logs are written to `output/finqa_bot.log` and console:
-
-```
-2025-12-11 15:43:51 - __main__ - INFO - Financial QA Bot initialized
-2025-12-11 15:43:51 - __main__ - INFO - Loading data from: sample_data.csv
-2025-12-11 15:43:51 - __main__ - INFO - ✓ Data loaded: 5 rows
+### QAChain
+Generates answers to questions.
+```python
+qa = QAChain(retriever, use_llm=True)
+answer = qa.generate_answer("What was revenue in 2023?")
 ```
 
-Change log level:
-
-```bash
-LOG_LEVEL=DEBUG python app.py
+### Visualizer
+Creates charts and graphs.
+```python
+viz = Visualizer(indexer.data)
+viz.plot_metric_over_time('Revenue', output_file='chart.png')
+viz.plot_comparison(['Revenue', 'Net_Income'])
 ```
 
----
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### API Key Not Found
-
 ```bash
 export OPENAI_API_KEY='sk-your-key'
 python app.py
 ```
 
 ### Data File Not Found
-
 ```bash
-# Use absolute path
-DATA_FILE=/path/to/data.csv python app.py
+DATA_FILE=/full/path/to/data.csv python app.py
 ```
 
-### LLM Disabled
+### Dependencies Missing
+```bash
+pip install -r requirements.txt
+```
 
-The bot falls back to rule-based QA if:
+### LLM Unavailable
+The bot automatically falls back to rule-based mode if:
 - API key is not set
-- USE_LLM=false
 - LLM request fails
+- `USE_LLM=false` is set
 
+## Performance
+
+- **Data loading**: ~100ms
+- **Per question**: ~200-500ms
+- **Chart generation**: ~500ms per chart
+- **Memory usage**: ~50MB
+- **Disk usage**: ~1MB for output
+
+## Technology Stack
+
+- **Python 3.10+**
+- **pandas 2.3.3** - Data processing
+- **numpy 2.3.5** - Numerical computing
+- **matplotlib 3.10.8** - Visualizations
+- **LangChain 1.1.3** - LLM framework
+- **OpenAI 2.9.0** - GPT-4o-mini API
+- **python-dotenv 1.0.0** - Environment variables
+
+
+
+## Examples
+
+### Basic Analysis
 ```bash
-USE_LLM=false python app.py
+python app.py
 ```
 
----
+### Custom Questions
+Edit the questions list in `app.py` (lines 170-175):
+```python
+business_questions = [
+    "What was revenue in 2023?",
+    "How did profit change from 2019 to 2023?"
+]
+```
 
-## 📄 License
+### Programmatic Usage
+```python
+from app import FinancialQABot
+
+bot = FinancialQABot()
+bot.load_data("my_data.csv")
+answer = bot.ask("What was net income in 2021?")
+print(answer)
+```
+
+## License
 
 Educational project for FE-520.
 
----
+## Support
 
-## 📧 Support
-
-- Check `output/finqa_bot.log` for issues
-- Verify CSV format matches examples
-- Ensure API key has sufficient credits
-
----
-
-**Production-Ready Financial QA Bot** ✨
+- Check `output/finqa_bot.log` for detailed logs
+- Ensure CSV format matches examples above
