@@ -31,6 +31,9 @@ export GOOGLE_API_KEY='your-key-here'
 # Run the analysis
 python app.py
 
+# (Optional) Verify LLM setup
+python test_llm.py
+
 # View results
 cat output/financial_analysis_report.json
 ```
@@ -45,7 +48,7 @@ cat output/financial_analysis_report.json
 
 ### Question Answering
 - Rule-based pattern matching (no API key needed)
-- Optional AI-powered responses using Google Gemini 1.5 Flash
+- Optional AI-powered responses using Google Gemini 2.0 Flash
 - Automatic fallback to rule-based mode
 - Batch question processing
 
@@ -123,7 +126,7 @@ from finqa_bot.config import Config
 config = Config(
     DATA_FILE="your_data.csv",
     USE_LLM=True,
-    MODEL="gpt-4o-mini",
+  MODEL="models/gemini-2.0-flash",
     OUTPUT_DIR="reports",
     LOG_LEVEL="INFO"
 )
@@ -154,6 +157,7 @@ Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
 ```
 ├── app.py                         # Main application
 ├── requirements.txt               # Dependencies
+├── test_llm.py                    # LLM integration check (optional)
 ├── sample_data.csv               # Example data
 ├── .env                          # API key (optional)
 │
