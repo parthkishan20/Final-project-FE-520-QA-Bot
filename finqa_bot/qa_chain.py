@@ -12,8 +12,8 @@ import os
 load_dotenv()  # This loads variables from .env file
 # Try to import LangChain - it's optional
 try:
-    from langchain_openai import ChatOpenAI
-    from langchain.schema import HumanMessage, SystemMessage
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_core.messages import HumanMessage, SystemMessage
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -42,21 +42,21 @@ class QAChain:
         
         # Initialize LLM if requested
         if self.use_llm:
-            api_key = api_key or os.getenv("OPENAI_API_KEY")
+            api_key = api_key or os.getenv("GOOGLE_API_KEY")
             if api_key:
                 try:
-                    self.llm = ChatOpenAI(
-                        model="gpt-4o-mini",
+                    self.llm = ChatGoogleGenerativeAI(
+                        model="models/gemini-2.0-flash",
                         temperature=0.3,
-                        api_key=api_key
+                        google_api_key=api_key
                     )
-                    print("✓ LLM enabled (using GPT-4o-mini)")
+                    print("✓ LLM enabled (using Gemini 2.0 Flash)")
                 except Exception as e:
                     print(f"⚠️  Could not initialize LLM: {e}")
                     print("   Falling back to rule-based QA")
                     self.use_llm = False
             else:
-                print("⚠️  No API key found. Set OPENAI_API_KEY to use LLM.")
+                print("⚠️  No API key found. Set GOOGLE_API_KEY to use LLM.")
                 print("   Using rule-based QA")
                 self.use_llm = False
     

@@ -21,8 +21,8 @@ The Financial QA Bot reads CSV financial data and generates insights through int
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up OpenAI API key (optional for AI-powered answers)
-export OPENAI_API_KEY='sk-your-key-here'
+# Set up Google AI Studio API key (optional for AI-powered answers)
+export GOOGLE_API_KEY='your-key-here'
 ```
 
 ### Run the Application
@@ -45,7 +45,7 @@ cat output/financial_analysis_report.json
 
 ### Question Answering
 - Rule-based pattern matching (no API key needed)
-- Optional AI-powered responses using GPT-4o-mini
+- Optional AI-powered responses using Google Gemini 1.5 Flash
 - Automatic fallback to rule-based mode
 - Batch question processing
 
@@ -109,8 +109,8 @@ bot.export_chart("Revenue", chart_type="line")
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `USE_LLM` | true | Enable AI-powered answers |
-| `LLM_MODEL` | gpt-4o-mini | Model to use (gpt-4o-mini recommended) |
-| `OPENAI_API_KEY` | (none) | OpenAI API key |
+| `LLM_MODEL` | models/gemini-2.0-flash | Model to use (Gemini 2.0 Flash recommended) |
+| `GOOGLE_API_KEY` | (none) | Google AI Studio API key |
 | `DATA_FILE` | sample_data.csv | Input CSV file |
 | `OUTPUT_DIR` | output | Output directory |
 | `LOG_LEVEL` | INFO | Logging level |
@@ -202,31 +202,31 @@ Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
 
 ## API Keys
 
-### Getting an OpenAI Key
+### Getting a Google AI Studio Key
 
-1. Visit https://platform.openai.com/api-keys
-2. Create a new secret key
-3. Copy the key (starts with `sk-`)
+1. Visit https://aistudio.google.com/app/apikey
+2. Click "Create API Key"
+3. Copy the key (starts with `AIza...`)
 
 ### Setting the Key
 
 **macOS/Linux:**
 ```bash
-export OPENAI_API_KEY='sk-your-key-here'
+export GOOGLE_API_KEY='your-key-here'
 ```
 
 **Windows (PowerShell):**
 ```powershell
-$env:OPENAI_API_KEY='sk-your-key-here'
+$env:GOOGLE_API_KEY='your-key-here'
 ```
 
 ### Cost
 
-- **Model**: gpt-4o-mini (most cost-effective)
-- **Input**: $0.15 per 1M tokens
-- **Output**: $0.60 per 1M tokens
-- **Per question**: ~$0.0001-0.0002
-- **Free tier**: $5 credit available
+- **Model**: Gemini 1.5 Flash
+- **FREE**: Generous free tier (60 requests per minute)
+- **Input**: Free up to 1M tokens/min
+- **Output**: Free up to 1M tokens/min
+- **No credit card required**
 
 ## Core Modules
 
@@ -299,8 +299,8 @@ The bot automatically falls back to rule-based mode if:
 - **pandas 2.3.3** - Data processing
 - **numpy 2.3.5** - Numerical computing
 - **matplotlib 3.10.8** - Visualizations
-- **LangChain 1.1.3** - LLM framework
-- **OpenAI 2.9.0** - GPT-4o-mini API
+- **LangChain 0.3.15** - LLM framework
+- **Google Generative AI 0.8.3** - Gemini 1.5 Flash API
 - **python-dotenv 1.0.0** - Environment variables
 
 

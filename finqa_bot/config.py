@@ -10,9 +10,9 @@ class Config:
     
     # LLM Settings
     USE_LLM: bool = True
-    MODEL: str = "gpt-4o-mini"
+    MODEL: str = "models/gemini-2.0-flash"  # Google AI model
     TEMPERATURE: float = 0.3
-    API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     
     # File Settings
     DATA_FILE: str = "sample_data.csv"
@@ -32,8 +32,8 @@ class Config:
         """Load configuration from environment variables."""
         return cls(
             USE_LLM=os.getenv("USE_LLM", "true").lower() == "true",
-            MODEL=os.getenv("LLM_MODEL", "gpt-4o-mini"),
-            API_KEY=os.getenv("OPENAI_API_KEY", ""),
+            MODEL=os.getenv("LLM_MODEL", "models/gemini-2.0-flash"),
+            API_KEY=os.getenv("GOOGLE_API_KEY", ""),
             DATA_FILE=os.getenv("DATA_FILE", "sample_data.csv"),
             OUTPUT_DIR=os.getenv("OUTPUT_DIR", "output"),
             LOG_LEVEL=os.getenv("LOG_LEVEL", "INFO"),
