@@ -10,7 +10,7 @@ import json
 import os
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from finqa_bot import DataIndexer, Retriever, QAChain, Visualizer
 from finqa_bot.config import Config
@@ -52,8 +52,9 @@ class FinancialQABot:
             self.retriever = Retriever(self.indexer)
             self.qa_chain = QAChain(
                 self.retriever,
+                openrouter_api_key=self.config.OPENROUTER_API_KEY,
+                openrouter_model=self.config.MODEL,
                 use_llm=self.config.USE_LLM,
-                api_key=self.config.API_KEY
             )
             self.visualizer = Visualizer(self.indexer.data)
             
@@ -101,8 +102,8 @@ class FinancialQABot:
         
         return results
     
-    def generate_report(self, questions: List[str], output_file: Optional[str] = None) -> str:
-        """Generate a business report with answers."""
+    def generate_report(self, questions: List[str], output_file: Optional[str] = None) -> Tuple[Dict, str]:
+        """Generate a business report with answers and return (report, file_path)."""
         output_file = output_file or f"{self.config.OUTPUT_DIR}/report.json"
         
         self.logger.info(f"Generating report: {output_file}")
@@ -124,7 +125,7 @@ class FinancialQABot:
             json.dump(report, f, indent=2)
         
         self.logger.info(f"✓ Report saved: {output_file}")
-        return output_file
+        return report, output_file
     
     def export_chart(self, metric: str, chart_type: str = "line") -> Optional[str]:
         """Export a metric visualization."""
@@ -190,7 +191,7 @@ def main():
     ]
     
     # Generate comprehensive report
-    report_file = bot.generate_report(
+    report, report_file = bot.generate_report(
         business_questions,
         output_file=f"{config.OUTPUT_DIR}/financial_analysis_report.json"
     )
@@ -206,7 +207,7 @@ def main():
     print(f"  • Columns: {', '.join(info['columns'])}")
     
     print(f"\nAnalysis Results:")
-    results = bot.ask_batch(business_questions)
+    results = report.get("results", [])
     for i, result in enumerate(results, 1):
         if result.get("status") == "success":
             print(f"\n  {i}. Q: {result['question']}")

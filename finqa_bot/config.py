@@ -8,11 +8,12 @@ from dataclasses import dataclass
 class Config:
     """Production configuration for the Financial QA Bot."""
     
-    # LLM Settings
-    USE_LLM: bool = True
-    MODEL: str = "models/gemini-2.0-flash"  # Google AI model
+    # LLM Settings (OpenRouter only)
+    USE_LLM: bool = True  # toggles OpenRouter usage; falls back to rule-based when False or missing key
+    MODEL: str = "mistralai/devstral-2512:free"  # OpenRouter model
     TEMPERATURE: float = 0.3
-    API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "mistralai/devstral-2512:free")
     
     # File Settings
     DATA_FILE: str = "sample_data.csv"
@@ -32,8 +33,9 @@ class Config:
         """Load configuration from environment variables."""
         return cls(
             USE_LLM=os.getenv("USE_LLM", "true").lower() == "true",
-            MODEL=os.getenv("LLM_MODEL", "models/gemini-2.0-flash"),
-            API_KEY=os.getenv("GOOGLE_API_KEY", ""),
+            MODEL=os.getenv("LLM_MODEL", "mistralai/devstral-2512:free"),
+            OPENROUTER_API_KEY=os.getenv("OPENROUTER_API_KEY", ""),
+            OPENROUTER_MODEL=os.getenv("OPENROUTER_MODEL", "mistralai/devstral-2512:free"),
             DATA_FILE=os.getenv("DATA_FILE", "sample_data.csv"),
             OUTPUT_DIR=os.getenv("OUTPUT_DIR", "output"),
             LOG_LEVEL=os.getenv("LOG_LEVEL", "INFO"),

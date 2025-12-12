@@ -21,8 +21,10 @@ The Financial QA Bot reads CSV financial data and generates insights through int
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up Google AI Studio API key (optional for AI-powered answers)
-export GOOGLE_API_KEY='your-key-here'
+# Set up OpenRouter API key (Mistral default)
+export OPENROUTER_API_KEY='your-openrouter-key'
+# Optional: choose a different OpenRouter model
+export OPENROUTER_MODEL='mistralai/devstral-2512:free'
 ```
 
 ### Run the Application
@@ -31,7 +33,7 @@ export GOOGLE_API_KEY='your-key-here'
 # Run the analysis
 python app.py
 
-# (Optional) Verify LLM setup
+# (Optional) Verify OpenRouter setup
 python test_llm.py
 
 # View results
@@ -48,7 +50,7 @@ cat output/financial_analysis_report.json
 
 ### Question Answering
 - Rule-based pattern matching (no API key needed)
-- Optional AI-powered responses using Google Gemini 2.0 Flash
+- AI-powered responses using OpenRouter (default: mistralai/devstral-2512:free)
 - Automatic fallback to rule-based mode
 - Batch question processing
 
@@ -99,7 +101,7 @@ print(result["answer"])
 
 # Batch processing
 questions = ["What was net income in 2021?", "What were expenses in 2020?"]
-report_file = bot.generate_report(questions)
+report, report_file = bot.generate_report(questions)
 
 # Generate charts
 bot.export_chart("Revenue", chart_type="line")
@@ -111,9 +113,10 @@ bot.export_chart("Revenue", chart_type="line")
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `USE_LLM` | true | Enable AI-powered answers |
-| `LLM_MODEL` | models/gemini-2.0-flash | Model to use (Gemini 2.0 Flash recommended) |
-| `GOOGLE_API_KEY` | (none) | Google AI Studio API key |
+| `USE_LLM` | true | Enable AI-powered answers (OpenRouter) |
+| `LLM_MODEL` | mistralai/devstral-2512:free | OpenRouter model to use |
+| `OPENROUTER_API_KEY` | (none) | OpenRouter API key |
+| `OPENROUTER_MODEL` | mistralai/devstral-2512:free | OpenRouter model name |
 | `DATA_FILE` | sample_data.csv | Input CSV file |
 | `OUTPUT_DIR` | output | Output directory |
 | `LOG_LEVEL` | INFO | Logging level |
@@ -126,7 +129,7 @@ from finqa_bot.config import Config
 config = Config(
     DATA_FILE="your_data.csv",
     USE_LLM=True,
-  MODEL="models/gemini-2.0-flash",
+    MODEL="mistralai/devstral-2512:free",
     OUTPUT_DIR="reports",
     LOG_LEVEL="INFO"
 )
@@ -157,7 +160,7 @@ Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
 ```
 ├── app.py                         # Main application
 ├── requirements.txt               # Dependencies
-├── test_llm.py                    # LLM integration check (optional)
+├── test_llm.py                    # OpenRouter integration check (optional)
 ├── sample_data.csv               # Example data
 ├── .env                          # API key (optional)
 │
@@ -206,31 +209,27 @@ Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
 
 ## API Keys
 
-### Getting a Google AI Studio Key
+### OpenRouter API Key (Mistral default)
 
-1. Visit https://aistudio.google.com/app/apikey
-2. Click "Create API Key"
-3. Copy the key (starts with `AIza...`)
-
-### Setting the Key
+1. Get a key from https://openrouter.ai/keys
+2. Set the key and optionally choose a model
 
 **macOS/Linux:**
 ```bash
-export GOOGLE_API_KEY='your-key-here'
+export OPENROUTER_API_KEY='your-openrouter-key'
+export OPENROUTER_MODEL='mistralai/devstral-2512:free'
 ```
 
 **Windows (PowerShell):**
 ```powershell
-$env:GOOGLE_API_KEY='your-key-here'
+$env:OPENROUTER_API_KEY='your-openrouter-key'
+$env:OPENROUTER_MODEL='mistralai/devstral-2512:free'
 ```
 
 ### Cost
 
-- **Model**: Gemini 1.5 Flash
-- **FREE**: Generous free tier (60 requests per minute)
-- **Input**: Free up to 1M tokens/min
-- **Output**: Free up to 1M tokens/min
-- **No credit card required**
+- **Default model**: mistralai/devstral-2512:free (no credit card required)
+- Check https://openrouter.ai/models for other options and pricing
 
 ## Core Modules
 
@@ -269,7 +268,7 @@ viz.plot_comparison(['Revenue', 'Net_Income'])
 
 ### API Key Not Found
 ```bash
-export OPENAI_API_KEY='sk-your-key'
+export OPENROUTER_API_KEY='your-openrouter-key'
 python app.py
 ```
 
@@ -303,8 +302,7 @@ The bot automatically falls back to rule-based mode if:
 - **pandas 2.3.3** - Data processing
 - **numpy 2.3.5** - Numerical computing
 - **matplotlib 3.10.8** - Visualizations
-- **LangChain 0.3.15** - LLM framework
-- **Google Generative AI 0.8.3** - Gemini 1.5 Flash API
+- **requests 2.32.3** - HTTP client for OpenRouter
 - **python-dotenv 1.0.0** - Environment variables
 
 

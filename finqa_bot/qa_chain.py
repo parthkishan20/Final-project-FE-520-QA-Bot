@@ -4,19 +4,13 @@ QA Chain Module
 
 This module generates answers to questions about the financial data.
 Phase 4: Simple rule-based QA
-Phase 5: Enhanced with LangChain integration (optional)
 """
 from dotenv import load_dotenv
 import re
 import os
+import requests
+import time
 load_dotenv()  # This loads variables from .env file
-# Try to import LangChain - it's optional
-try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain_core.messages import HumanMessage, SystemMessage
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
 
 
 class QAChain:
@@ -24,41 +18,24 @@ class QAChain:
     Generates natural language answers to financial questions.
     
     Phase 4: Uses simple pattern matching
-    Phase 5: Can optionally use LangChain/LLM for better answers
+    Phase 5: Uses OpenRouter (Mistral) when configured
     """
     
-    def __init__(self, retriever, use_llm=False, api_key=None):
-        """
-        Initialize the QA Chain.
-        
+    def __init__(self, retriever, openrouter_api_key=None, openrouter_model=None, use_llm=True):
+        """Initialize the QA Chain.
+
         Args:
             retriever: Retriever instance to get data from
-            use_llm (bool): Whether to use LangChain/LLM (Phase 5)
-            api_key (str): OpenAI API key (optional, can use env var)
+            openrouter_api_key (str): OpenRouter API key; falls back to env var
+            openrouter_model (str): OpenRouter model id
+            use_llm (bool): Whether to call OpenRouter (falls back to rules when False)
         """
         self.retriever = retriever
-        self.use_llm = use_llm and LANGCHAIN_AVAILABLE
-        self.llm = None
-        
-        # Initialize LLM if requested
-        if self.use_llm:
-            api_key = api_key or os.getenv("GOOGLE_API_KEY")
-            if api_key:
-                try:
-                    self.llm = ChatGoogleGenerativeAI(
-                        model="models/gemini-2.0-flash",
-                        temperature=0.3,
-                        google_api_key=api_key
-                    )
-                    print("✓ LLM enabled (using Gemini 2.0 Flash)")
-                except Exception as e:
-                    print(f"⚠️  Could not initialize LLM: {e}")
-                    print("   Falling back to rule-based QA")
-                    self.use_llm = False
-            else:
-                print("⚠️  No API key found. Set GOOGLE_API_KEY to use LLM.")
-                print("   Using rule-based QA")
-                self.use_llm = False
+        self.use_llm = use_llm
+        self.openrouter_api_key = openrouter_api_key or os.getenv("OPENROUTER_API_KEY")
+        self.openrouter_model = openrouter_model or os.getenv("OPENROUTER_MODEL", "mistralai/devstral-2512:free")
+        self._cache = {}  # simple in-memory cache to avoid repeated LLM calls
+        self._llm_disabled = False  # disable further calls after rate-limit errors
     
     def generate_answer(self, query):
         """
@@ -70,67 +47,77 @@ class QAChain:
         Returns:
             str: Natural language answer
         """
-        # Try LLM first if enabled
-        if self.use_llm and self.llm:
+        cache_key = query.strip().lower()
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        # Prefer OpenRouter (Mistral) if enabled and key present
+        if self.use_llm and not self._llm_disabled and self.openrouter_api_key:
             try:
-                return self._generate_llm_answer(query)
+                answer = self._generate_openrouter_answer(query)
+                self._cache[cache_key] = answer
+                return answer
             except Exception as e:
-                print(f"⚠️  LLM failed: {e}, using fallback")
-                # Fall through to rule-based
-        
+                resp = getattr(e, "response", None)
+                if resp is not None and getattr(resp, "status_code", None) == 429:
+                    self._llm_disabled = True
+                    print("⚠️  OpenRouter rate limit hit (429). Disabling LLM for this run; using rule-based answers.")
+                else:
+                    print(f"⚠️  OpenRouter failed: {e}, using rule-based fallback")
+
         # Fallback to rule-based answer (Phase 4)
-        return self._generate_rule_based_answer(query)
+        answer = self._generate_rule_based_answer(query)
+        self._cache[cache_key] = answer
+        return answer
     
-    def _generate_llm_answer(self, query):
+    def _generate_openrouter_answer(self, query):
         """
-        Generate answer using LangChain and LLM (Phase 5).
-        
-        Args:
-            query (str): User's question
-            
-        Returns:
-            str: LLM-generated answer
+        Generate answer using OpenRouter HTTP API.
         """
-        # Parse query to get context
         metric, year = self._parse_query(query)
-        
-        # Get relevant data
+
         data_context = ""
         if metric and year:
             value = self.retriever.get_value(metric, year=year)
             if value is not None:
                 data_context = f"{metric} in {year}: ${value:,}"
         elif metric:
-            # Get some recent years
             for y in [2023, 2022, 2021, 2020, 2019]:
                 val = self.retriever.get_value(metric, year=y)
                 if val is not None:
                     data_context += f"{metric} in {y}: ${val:,}\n"
-        
+
         if not data_context:
             data_context = "No specific data found for this query."
-        
-        # Create the prompt
-        system_prompt = """You are a helpful financial analyst. 
-Given financial data, answer questions clearly and concisely.
-Format dollar amounts nicely and provide context when helpful."""
-        
-        user_prompt = f"""Given this data:
 
-{data_context}
+        system_prompt = "You are a helpful financial analyst. Given financial data, answer clearly and concisely."
+        user_prompt = f"Given this data:\n\n{data_context}\n\nQuestion: {query}\n\nProvide a clear, professional answer."
 
-Question: {query}
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost",  # optional but recommended
+            "X-Title": "Financial QA Bot"
+        }
 
-Please provide a clear, professional answer."""
-        
-        # Call the LLM
-        messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=user_prompt)
-        ]
-        
-        response = self.llm.invoke(messages)
-        return response.content.strip()
+        payload = {
+            "model": self.openrouter_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.3
+        }
+
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"].strip()
     
     def _generate_rule_based_answer(self, query):
         """
