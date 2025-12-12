@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Financial QA Bot - Production Application
+Financial QA Bot - Application
 ==========================================
 
 A business-ready financial analysis tool that reads CSV data and answers questions.
@@ -18,7 +18,7 @@ from finqa_bot.logger import setup_logger
 
 
 class FinancialQABot:
-    """Production-grade Financial QA Bot."""
+    """Financial QA Bot."""
     
     def __init__(self, config: Optional[Config] = None):
         """Initialize the bot with configuration."""
@@ -171,7 +171,7 @@ class FinancialQABot:
 
 
 def main():
-    """Main entry point for production use."""
+    """Main entry point for use."""
     
     # Initialize bot with configuration
     config = Config.from_env()
