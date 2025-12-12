@@ -1,12 +1,9 @@
-"""Configuration Management for Financial QA Bot"""
-
 import os
 from dataclasses import dataclass
 
-
 @dataclass
 class Config:
-    """Production configuration for the Financial QA Bot."""
+    """ Configuration for the Financial QA Bot."""
     
     # LLM Settings (OpenRouter only)
     USE_LLM: bool = True  # toggles OpenRouter usage; falls back to rule-based when False or missing key

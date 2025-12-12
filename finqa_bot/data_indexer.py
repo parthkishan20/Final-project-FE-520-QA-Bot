@@ -1,9 +1,7 @@
 """
 Data Indexer Module
 ===================
-
 This module handles loading CSV files and providing access to the data.
-Phase 2 implementation.
 """
 
 import pandas as pd

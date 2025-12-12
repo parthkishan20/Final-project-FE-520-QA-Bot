@@ -3,7 +3,6 @@ Visualizer Module
 =================
 
 This module creates charts and visualizations for financial data.
-Phase 6 implementation.
 """
 
 import matplotlib.pyplot as plt

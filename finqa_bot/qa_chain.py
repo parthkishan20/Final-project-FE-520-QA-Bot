@@ -3,7 +3,6 @@ QA Chain Module
 ===============
 
 This module generates answers to questions about the financial data.
-Phase 4: Simple rule-based QA
 """
 from dotenv import load_dotenv
 import re
@@ -16,9 +15,6 @@ load_dotenv()  # This loads variables from .env file
 class QAChain:
     """
     Generates natural language answers to financial questions.
-    
-    Phase 4: Uses simple pattern matching
-    Phase 5: Uses OpenRouter (Mistral) when configured
     """
     
     def __init__(self, retriever, openrouter_api_key=None, openrouter_model=None, use_llm=True):
@@ -121,7 +117,7 @@ class QAChain:
     
     def _generate_rule_based_answer(self, query):
         """
-        Generate answer using simple rules (Phase 4).
+        Generate answer using simple rules.
         
         Args:
             query (str): User's question

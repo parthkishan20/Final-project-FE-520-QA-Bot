@@ -1,4 +1,4 @@
-"""Production logging for Financial QA Bot"""
+"""Logging for Financial QA Bot"""
 
 import logging
 import os
@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 def setup_logger(name, log_file=None, level=logging.INFO):
-    """Setup production-grade logger."""
+    """Setup logger."""
     
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',

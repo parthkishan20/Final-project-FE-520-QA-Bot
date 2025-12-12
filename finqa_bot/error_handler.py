@@ -2,7 +2,6 @@
 ====================
 
 This module provides nice, user-friendly error messages and exception handling.
-Phase 7 implementation.
 """
 
 

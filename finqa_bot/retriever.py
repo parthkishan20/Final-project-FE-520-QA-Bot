@@ -3,7 +3,6 @@ Retriever Module
 ================
 
 This module finds specific values from the data based on keywords.
-Phase 3 implementation.
 """
 
 from difflib import get_close_matches
