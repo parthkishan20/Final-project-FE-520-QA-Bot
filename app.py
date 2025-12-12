@@ -218,11 +218,64 @@ def main():
     
     # Generate charts
     print(f"\nGenerating Visualizations:")
+    
+    # 1. Basic Line Charts
     metrics = ["Revenue", "Net_Income", "Operating_Expenses"]
     for metric in metrics:
         chart_file = bot.export_chart(metric, chart_type="line")
         if chart_file:
-            print(f"  ✓ {metric} chart: {chart_file}")
+            print(f"  ✓ {metric} line chart: {chart_file}")
+    
+    # 2. Bar Chart
+    try:
+        bar_file = f"{config.CHART_DIR}/total_assets_bar.png"
+        bot.visualizer.plot_bar_chart("Total_Assets", output_file=bar_file, show=False)
+        print(f"  ✓ Total Assets bar chart: {bar_file}")
+    except Exception as e:
+        print(f"  ⚠️  Bar chart failed: {e}")
+    
+    # 3. Comparison Chart
+    try:
+        comp_file = f"{config.CHART_DIR}/comparison.png"
+        bot.visualizer.plot_comparison(["Revenue", "Net_Income", "Operating_Expenses"], 
+                                        output_file=comp_file, show=False)
+        print(f"  ✓ Comparison chart: {comp_file}")
+    except Exception as e:
+        print(f"  ⚠️  Comparison chart failed: {e}")
+    
+    # 4. Waterfall Chart (for latest year)
+    try:
+        waterfall_file = f"{config.CHART_DIR}/waterfall_2023.png"
+        bot.visualizer.plot_waterfall(target_year=2023, output_file=waterfall_file, show=False)
+        print(f"  ✓ Waterfall chart: {waterfall_file}")
+    except Exception as e:
+        print(f"  ⚠️  Waterfall chart failed: {e}")
+    
+    # 5. Margin Box Plot
+    try:
+        boxplot_file = f"{config.CHART_DIR}/margin_boxplot.png"
+        bot.visualizer.plot_margin_boxplot(output_file=boxplot_file, show=False)
+        print(f"  ✓ Margin boxplot: {boxplot_file}")
+    except Exception as e:
+        print(f"  ⚠️  Margin boxplot failed: {e}")
+    
+    # 6. Momentum Chart (use small windows for 5-year dataset)
+    try:
+        momentum_file = f"{config.CHART_DIR}/momentum_revenue.png"
+        bot.visualizer.plot_momentum(metric='Revenue', window_short=2, window_long=3, 
+                                      output_file=momentum_file, show=False)
+        print(f"  ✓ Momentum chart: {momentum_file}")
+    except Exception as e:
+        print(f"  ⚠️  Momentum chart failed: {e}")
+    
+    # 7. Rolling Correlation (use small window for 5-year dataset)
+    try:
+        corr_file = f"{config.CHART_DIR}/correlation_revenue_assets.png"
+        bot.visualizer.plot_rolling_correlation(metric1='Revenue', metric2='Total_Assets', 
+                                                 window=3, output_file=corr_file, show=False)
+        print(f"  ✓ Rolling correlation chart: {corr_file}")
+    except Exception as e:
+        print(f"  ⚠️  Rolling correlation chart failed: {e}")
     
     print("\n" + "="*70)
     print(f"Report saved: {report_file}")
