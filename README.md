@@ -190,12 +190,12 @@ Recognized metrics: Revenue, Sales, Net Income, Profit, Expenses, Assets
   "metadata": {
     "total_questions": 4,
     "successful": 4,
-    "model": "gpt-4o-mini"
+    "model": "mistralai/devstral-2512:free"
   },
   "results": [
     {
       "question": "What was revenue in 2023?",
-      "answer": "The Revenue in 2023 was $1,650,000.",
+      "answer": "The Revenue in 2023 was $19,370,714.",
       "status": "success"
     }
   ]
