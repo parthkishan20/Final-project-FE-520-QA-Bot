@@ -1,4 +1,4 @@
-"""
+﻿"""
 QA Chain Module
 ===============
 
@@ -57,9 +57,9 @@ class QAChain:
                 resp = getattr(e, "response", None)
                 if resp is not None and getattr(resp, "status_code", None) == 429:
                     self._llm_disabled = True
-                    print("⚠️  OpenRouter rate limit hit (429). Disabling LLM for this run; using rule-based answers.")
+                    print("[!]  OpenRouter rate limit hit (429). Disabling LLM for this run; using rule-based answers.")
                 else:
-                    print(f"⚠️  OpenRouter failed: {e}, using rule-based fallback")
+                    print(f"[!]  OpenRouter failed: {e}, using rule-based fallback")
 
         # Fallback to rule-based answer (Phase 4)
         answer = self._generate_rule_based_answer(query)
@@ -137,8 +137,8 @@ class QAChain:
         if value is None:
             return f"I couldn't find data for {metric}" + (f" in {year}" if year else "") + "."
         
-        # Format the answer
-        answer = self._format_answer(metric, value, year)
+        # Format the answer - pass query for context
+        answer = self._format_answer(metric, value, year, query)
         return answer
     
     def _parse_query(self, query):
@@ -178,7 +178,7 @@ class QAChain:
         
         return metric, year
     
-    def _format_answer(self, metric, value, year):
+    def _format_answer(self, metric, value, year, query=""):
         """
         Format a nice answer sentence.
         
@@ -186,27 +186,69 @@ class QAChain:
             metric (str): The metric name
             value: The value (number or series)
             year (int, optional): The year
+            query (str): Original question for context
             
         Returns:
             str: Formatted answer
         """
-        # Format the metric name nicely (replace underscores with spaces)
+        import pandas as pd
+        
         metric_display = metric.replace('_', ' ')
+        query_lower = query.lower()
         
-        # Format the value nicely
+        # Handle pandas Series (trend data)
+        if isinstance(value, pd.Series):
+            if len(value) == 0:
+                return f"No data available for {metric_display}."
+            
+            # Get the year column from the retriever's data
+            year_col_data = self.retriever.data[self.retriever.indexer.get_columns()[0]]  # First column is typically Year
+            
+            # Create a series with year as index for better display
+            value_with_years = pd.Series(value.values, index=year_col_data.values)
+            
+            # Check if question asks for specific year(s) with max/min
+            asking_for_best = any(word in query_lower for word in ['best', 'highest', 'maximum', 'peak', 'most', 'top'])
+            asking_for_worst = any(word in query_lower for word in ['worst', 'lowest', 'minimum', 'least', 'bottom'])
+            asking_for_which = 'which year' in query_lower or 'what year' in query_lower or 'when was' in query_lower
+            
+            if asking_for_best or (asking_for_which and asking_for_best):
+                max_val = value_with_years.max()
+                max_years = value_with_years[value_with_years == max_val].index.tolist()
+                year_str = ", ".join(map(str, max_years))
+                return f"The best year(s) for {metric_display} was {year_str} with ${max_val:,.0f}."
+            
+            if asking_for_worst or (asking_for_which and asking_for_worst):
+                min_val = value_with_years.min()
+                min_years = value_with_years[value_with_years == min_val].index.tolist()
+                year_str = ", ".join(map(str, min_years))
+                return f"The worst year(s) for {metric_display} was {year_str} with ${min_val:,.0f}."
+            
+            # Default: show trend with recent values
+            first_val = value_with_years.iloc[0]
+            last_val = value_with_years.iloc[-1]
+            pct_change = ((last_val - first_val) / first_val * 100) if first_val != 0 else 0
+            
+            direction = "increased" if pct_change > 0 else "decreased"
+            trend_desc = f"{direction} by {abs(pct_change):.1f}%"
+            
+            # Show recent 5 years if available
+            recent = value_with_years.tail(5)
+            year_data = "\n      ".join([f"{idx}: ${val:,.0f}" for idx, val in recent.items()])
+            
+            return (f"{metric_display} {trend_desc} from ${first_val:,.0f} to ${last_val:,.0f}.\n"
+                   f"      Recent values:\n      {year_data}")
+        
+        # Handle single value
         if isinstance(value, (int, float)):
-            formatted_value = self._format_number(value)
-        else:
-            # If it's a series/list, just use the first value
-            formatted_value = self._format_number(value)
+            formatted_value = f"${value:,.0f}"
+            if year:
+                return f"The {metric_display} in {year} was {formatted_value}."
+            else:
+                return f"The {metric_display} is {formatted_value}."
         
-        # Build the sentence
-        if year:
-            answer = f"The {metric_display} in {year} was {formatted_value}."
-        else:
-            answer = f"The {metric_display} is {formatted_value}."
-        
-        return answer
+        # Fallback
+        return f"The {metric_display} is {value}."
     
     def _format_number(self, value):
         """
@@ -223,3 +265,4 @@ class QAChain:
             return f"${num:,.0f}"
         except:
             return str(value)
+

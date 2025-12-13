@@ -1,4 +1,4 @@
-"""
+﻿"""
 Retriever Module
 ================
 
@@ -49,7 +49,7 @@ class Retriever:
             return matches[0]
         
         # If still no match, return None
-        print(f"⚠️  Column '{keyword}' not found. Available columns: {columns}")
+        print(f"[!]  Column '{keyword}' not found. Available columns: {columns}")
         return None
     
     def get_value(self, column_keyword, year=None):
@@ -76,7 +76,7 @@ class Retriever:
         filtered_data = self.filter_by_year(year)
         
         if filtered_data.empty:
-            print(f"⚠️  No data found for year {year}")
+            print(f"[!]  No data found for year {year}")
             return None
         
         # Return the value for that year
@@ -111,3 +111,4 @@ class Retriever:
         # Filter the data
         filtered = self.data[self.data[year_col] == year]
         return filtered
+

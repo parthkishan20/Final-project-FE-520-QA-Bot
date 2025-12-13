@@ -59,7 +59,7 @@ class FinancialQABot:
             self.visualizer = Visualizer(self.indexer.data)
             
             if self.indexer.data is not None:
-                self.logger.info(f"✓ Data loaded: {len(self.indexer.data)} rows")
+                self.logger.info(f"[SUCCESS] Data loaded: {len(self.indexer.data)} rows")
             return True
         except Exception as e:
             self.logger.error(f"Failed to load data: {e}")
@@ -121,10 +121,10 @@ class FinancialQABot:
         
         # Save report
         os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2)
         
-        self.logger.info(f"✓ Report saved: {output_file}")
+        self.logger.info(f"[SUCCESS] Report saved: {output_file}")
         return report, output_file
     
     def export_chart(self, metric: str, chart_type: str = "line") -> Optional[str]:
@@ -151,7 +151,7 @@ class FinancialQABot:
                     show=False
                 )
             
-            self.logger.info(f"✓ Chart saved: {output_file}")
+            self.logger.info(f"[SUCCESS] Chart saved: {output_file}")
             return output_file
         
         except Exception as e:
@@ -170,6 +170,46 @@ class FinancialQABot:
         }
 
 
+def generate_chart(bot, chart_type, name, output_file, **kwargs):
+    """Helper to generate charts with error handling."""
+    import io
+    import sys
+    try:
+        # Suppress print output from visualizer
+        old_stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        
+        method = getattr(bot.visualizer, f'plot_{chart_type}')
+        method(output_file=output_file, show=False, **kwargs)
+        
+        sys.stdout = old_stdout
+        return (True, output_file)
+    except Exception as e:
+        sys.stdout = old_stdout
+        return (False, str(e))
+
+
+def load_questions_from_file(file_path="questions.txt"):
+    """Load questions from text file. File must exist."""
+    if not os.path.exists(file_path):
+        print(f"\n[ERROR] Questions file '{file_path}' not found. Create it and try again.")
+        exit(1)
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            questions = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        
+        if not questions:
+            print(f"\n[ERROR] No valid questions in {file_path}. Add questions and try again.")
+            exit(1)
+        
+        print(f"[OK] Loaded {len(questions)} questions from {file_path}")
+        return questions
+    except Exception as e:
+        print(f"\n[ERROR] Failed to read {file_path}: {e}")
+        exit(1)
+
+
 def main():
     """Main entry point for use."""
     
@@ -182,13 +222,9 @@ def main():
         print("ERROR: Failed to load data")
         return 1
     
-    # Business questions for analysis
-    business_questions = [
-        "What was the revenue in 2023?",
-        "What was net income in 2021?",
-        "What were operating expenses in 2020?",
-        "What were total assets in 2022?",
-    ]
+    # Load business questions from file
+    questions_file = os.getenv("QUESTIONS_FILE", "questions.txt")
+    business_questions = load_questions_from_file(questions_file)
     
     # Generate comprehensive report
     report, report_file = bot.generate_report(
@@ -196,90 +232,66 @@ def main():
         output_file=f"{config.OUTPUT_DIR}/financial_analysis_report.json"
     )
     
-    # Print results in clean format
-    print("\n" + "="*70)
-    print("FINANCIAL QA BOT - ANALYSIS RESULTS")
-    print("="*70)
-    
-    print(f"\nData Information:")
+    # Print results
     info = bot.get_data_info()
-    print(f"  • Rows: {info['rows']}")
-    print(f"  • Columns: {', '.join(info['columns'])}")
+    print(f"\n{'='*80}\n{'FINANCIAL QA BOT - ANALYSIS RESULTS':^80}\n{'='*80}")
+    print(f"\n[DATA INFORMATION]\n  Dataset: {info['file']}\n  Records: {info['rows']} rows\n  Columns: {', '.join(info['columns'])}")
+    print(f"\n{'-'*80}\n[QUESTION & ANSWER RESULTS]\n{'-'*80}")
     
-    print(f"\nAnalysis Results:")
-    results = report.get("results", [])
-    for i, result in enumerate(results, 1):
-        if result.get("status") == "success":
-            print(f"\n  {i}. Q: {result['question']}")
-            print(f"     A: {result['answer']}")
-        else:
-            print(f"\n  {i}. Q: {result.get('question', 'N/A')}")
-            print(f"     ERROR: {result.get('error', 'Unknown error')}")
+    for i, result in enumerate(report.get("results", []), 1):
+        status = "Answer" if result.get("status") == "success" else "ERROR"
+        answer = result.get('answer') if status == "Answer" else result.get('error', 'Unknown error')
+        print(f"\n  [{i}] Question: {result['question']}\n      {status}: {answer}")
     
     # Generate charts
-    print(f"\nGenerating Visualizations:")
+    print("\n" + "-"*80)
+    print("[GENERATING VISUALIZATIONS]")
+    print("-"*80)
     
-    # 1. Basic Line Charts
-    metrics = ["Revenue", "Net_Income", "Operating_Expenses"]
-    for metric in metrics:
-        chart_file = bot.export_chart(metric, chart_type="line")
-        if chart_file:
-            print(f"  ✓ {metric} line chart: {chart_file}")
+    chart_count = 0
+    charts = [
+        # Basic charts
+        *[("metric_over_time", f"Line chart: {m}", f"{config.CHART_DIR}/{m.lower()}.png", {"metric": m}) 
+          for m in ["Revenue", "Net_Income", "Operating_Expenses"]],
+        ("bar_chart", "Bar chart: Total Assets", f"{config.CHART_DIR}/total_assets_bar.png", {"metric": "Total_Assets"}),
+        ("comparison", "Comparison chart", f"{config.CHART_DIR}/comparison.png", 
+         {"metrics": ["Revenue", "Net_Income", "Operating_Expenses"]}),
+        ("waterfall", "Waterfall chart", f"{config.CHART_DIR}/waterfall_2023.png", {"target_year": 2023}),
+        ("margin_boxplot", "Box plot: Margin", f"{config.CHART_DIR}/margin_boxplot.png", {}),
+        ("momentum", "Momentum analysis", f"{config.CHART_DIR}/momentum_revenue.png", 
+         {"metric": "Revenue", "window_short": 2, "window_long": 3}),
+        ("rolling_correlation", "Rolling correlation", f"{config.CHART_DIR}/correlation_revenue_assets.png", 
+         {"metric1": "Revenue", "metric2": "Total_Assets", "window": 3}),
+        
+        # Advanced visualizations
+        ("dual_axis_chart", "Dual Axis: Revenue vs Margin", f"{config.CHART_DIR}/dual_axis.png", 
+         {"metric1": "Revenue", "metric2": "Net_Margin"}),
+        ("area_stacked", "Stacked Area Chart", f"{config.CHART_DIR}/stacked_area.png", 
+         {"metrics": ["Revenue", "Operating_Expenses", "Net_Income"]}),
+        ("yoy_heatmap", "YoY Heatmap: Revenue", f"{config.CHART_DIR}/yoy_heatmap.png", {"metric": "Revenue"}),
+        ("scatter_regression", "Scatter: Revenue vs Assets", f"{config.CHART_DIR}/scatter_regression.png", 
+         {"x_metric": "Total_Assets", "y_metric": "Revenue"}),
+        ("financial_ratios_dashboard", "Financial Ratios Dashboard", f"{config.CHART_DIR}/ratios_dashboard.png", {}),
+        ("profitability_funnel", "Profitability Funnel", f"{config.CHART_DIR}/funnel.png", {"target_year": 2023}),
+    ]
     
-    # 2. Bar Chart
-    try:
-        bar_file = f"{config.CHART_DIR}/total_assets_bar.png"
-        bot.visualizer.plot_bar_chart("Total_Assets", output_file=bar_file, show=False)
-        print(f"  ✓ Total Assets bar chart: {bar_file}")
-    except Exception as e:
-        print(f"  ⚠️  Bar chart failed: {e}")
+    for chart_type, name, file, kwargs in charts:
+        success, result = generate_chart(bot, chart_type, name, file, **kwargs)
+        chart_count += 1
+        if success:
+            print(f"  [{chart_count}][OK] {name:<30} -> {result}")
+        else:
+            print(f"  [{chart_count}][!] {name:<30} -> Failed: {result}")
     
-    # 3. Comparison Chart
-    try:
-        comp_file = f"{config.CHART_DIR}/comparison.png"
-        bot.visualizer.plot_comparison(["Revenue", "Net_Income", "Operating_Expenses"], 
-                                        output_file=comp_file, show=False)
-        print(f"  ✓ Comparison chart: {comp_file}")
-    except Exception as e:
-        print(f"  ⚠️  Comparison chart failed: {e}")
-    
-    # 4. Waterfall Chart (for latest year)
-    try:
-        waterfall_file = f"{config.CHART_DIR}/waterfall_2023.png"
-        bot.visualizer.plot_waterfall(target_year=2023, output_file=waterfall_file, show=False)
-        print(f"  ✓ Waterfall chart: {waterfall_file}")
-    except Exception as e:
-        print(f"  ⚠️  Waterfall chart failed: {e}")
-    
-    # 5. Margin Box Plot
-    try:
-        boxplot_file = f"{config.CHART_DIR}/margin_boxplot.png"
-        bot.visualizer.plot_margin_boxplot(output_file=boxplot_file, show=False)
-        print(f"  ✓ Margin boxplot: {boxplot_file}")
-    except Exception as e:
-        print(f"  ⚠️  Margin boxplot failed: {e}")
-    
-    # 6. Momentum Chart (use small windows for 5-year dataset)
-    try:
-        momentum_file = f"{config.CHART_DIR}/momentum_revenue.png"
-        bot.visualizer.plot_momentum(metric='Revenue', window_short=2, window_long=3, 
-                                      output_file=momentum_file, show=False)
-        print(f"  ✓ Momentum chart: {momentum_file}")
-    except Exception as e:
-        print(f"  ⚠️  Momentum chart failed: {e}")
-    
-    # 7. Rolling Correlation (use small window for 5-year dataset)
-    try:
-        corr_file = f"{config.CHART_DIR}/correlation_revenue_assets.png"
-        bot.visualizer.plot_rolling_correlation(metric1='Revenue', metric2='Total_Assets', 
-                                                 window=3, output_file=corr_file, show=False)
-        print(f"  ✓ Rolling correlation chart: {corr_file}")
-    except Exception as e:
-        print(f"  ⚠️  Rolling correlation chart failed: {e}")
-    
-    print("\n" + "="*70)
-    print(f"Report saved: {report_file}")
-    print("="*70 + "\n")
+    print("\n" + "="*80)
+    print("[SUMMARY]")
+    print(f"  Total Questions Processed: {len(business_questions)}")
+    print(f"  Total Charts Generated: {chart_count}")
+    print(f"  Report Location: {report_file}")
+    print(f"  Charts Directory: {config.CHART_DIR}")
+    print("="*80)
+    print("\n[SUCCESS] Financial analysis completed successfully!")
+    print("="*80 + "\n")
     
     return 0
 
