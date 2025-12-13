@@ -1,0 +1,37 @@
+# Financial Performance Analysis Questions
+# These questions test various financial metrics and ratios
+
+# Profitability Metrics
+What is the net profit margin for 2023?
+Calculate the return on assets (ROA) for 2022
+What was the operating profit margin in 2021?
+How has the profit margin changed from 2019 to 2023?
+
+# Growth Analysis
+What is the compound annual growth rate (CAGR) of revenue from 2019 to 2023?
+Calculate the year-over-year revenue growth for 2023
+What is the percentage increase in net income from 2020 to 2023?
+How much did total assets grow between 2019 and 2023?
+
+# Efficiency Ratios
+What is the operating expense ratio for 2023?
+Calculate the asset turnover ratio using 2023 data
+What percentage of revenue was spent on operating expenses in 2022?
+
+# Comparative Analysis
+Compare the profitability between 2020 and 2023
+Which year had the highest net income between 2019 and 2023?
+How does the 2023 operating efficiency compare to 2019?
+
+# Trend Analysis
+What is the trend in operating expenses over the last 5 years?
+Analyze the revenue growth trajectory from 2019 to 2023
+What is the average annual net income for the period 2019-2023?
+
+# Financial Health Indicators
+What is the ratio of net income to total assets in 2023?
+Calculate the earnings retention if we assume 30% dividend payout in 2023
+What was the break-even point analysis for 2022?
+
+#Data Driven 
+In which years was the best time to own an asset?

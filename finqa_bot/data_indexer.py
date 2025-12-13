@@ -1,4 +1,4 @@
-"""
+﻿"""
 Data Indexer Module
 ===================
 This module handles loading CSV files and providing access to the data.
@@ -51,7 +51,7 @@ class DataIndexer:
             if self.data.empty:
                 raise ValueError(f"The file {file_path} is empty")
             
-            print(f"✓ Loaded {len(self.data)} rows from {file_path}")
+            print(f"[OK] Loaded {len(self.data)} rows from {file_path}")
             return self.data
             
         except pd.errors.EmptyDataError:
@@ -102,3 +102,4 @@ class DataIndexer:
         print("\nColumn Details:")
         self.data.info()
         print("="*50 + "\n")
+
