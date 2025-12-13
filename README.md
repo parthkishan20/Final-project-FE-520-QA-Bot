@@ -31,15 +31,21 @@ export OPENROUTER_MODEL='mistralai/devstral-2512:free'
 ### Run the Application
 
 ```bash
-# Create questions.txt file with your questions (one per line)
-# Run the analysis
+# 1. Create questions.txt file with your questions (one per line)
+echo "What was revenue in 2023?" > questions.txt
+echo "In which years was the best time to own an asset?" >> questions.txt
+
+# 2. Run the analysis
 python app.py
+
+# 3. View results in console output OR check output.txt (if redirected)
+cat output/financial_analysis_report.json
+
+# (Optional) Save console output to file
+python app.py > output.txt
 
 # (Optional) Verify OpenRouter setup
 python openrouter_test.py
-
-# View results
-cat output/financial_analysis_report.json
 ```
 
 ## Features
@@ -111,6 +117,13 @@ In which years was the best time to own an asset?
 What is the trend in operating expenses over the last 5 years?
 Which year had the highest net income?
 ```
+
+**Input/Output Workflow:**
+1. **Add questions** to `questions.txt` (one per line, `#` for comments)
+2. **Run** `python app.py`
+3. **View answers** in console OR redirect to file: `python app.py > output.txt`
+4. **Check visualizations** in `output/charts/` directory
+5. **Review JSON report** in `output/financial_analysis_report.json`
 
 ### As a Python Module
 
@@ -255,7 +268,9 @@ Answer: "Operating Expenses increased by 1285.4% from $41,000 to $568,000.
 ```
 
 ### Generated Files
-- `output/financial_analysis_report.json` - Complete analysis results
+- `questions.txt` - **Input**: Your questions (one per line)
+- `output.txt` - **Output**: Console results (optional, use `python app.py > output.txt`)
+- `output/financial_analysis_report.json` - Complete analysis results (structured JSON)
 - `output/charts/*.png` - 15 high-resolution visualizations (300 DPI)
 - `output/finqa_bot.log` - Detailed logs
 
@@ -412,10 +427,14 @@ All files now use UTF-8 encoding to prevent Windows cp1252 errors. Output uses A
 ```bash
 # Ensure questions.txt exists
 python app.py
+
+# Save all output to file for later review
+python app.py > output.txt
 ```
 
-### Custom Questions
-Create or edit `questions.txt`:
+### Custom Questions Workflow
+
+**Step 1: Create or edit `questions.txt`**
 ```text
 # Profitability Analysis
 What is the net profit margin for 2023?
@@ -428,6 +447,23 @@ Which year had the highest net income between 2019 and 2023?
 # Trend Analysis
 What is the trend in operating expenses over the last 5 years?
 How has the profit margin changed from 2019 to 2023?
+```
+
+**Step 2: Run analysis and save output**
+```bash
+python app.py > output.txt
+```
+
+**Step 3: Review results**
+```bash
+# View formatted answers
+cat output.txt
+
+# Check JSON report
+cat output/financial_analysis_report.json
+
+# View generated charts
+ls output/charts/
 ```
 
 ### Programmatic Usage
